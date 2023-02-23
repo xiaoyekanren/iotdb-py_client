@@ -16,6 +16,7 @@ data_file = "param0.json"
 
 
 def main():
+    print('start insert_record')
     insert_record(session, data_file)
     # # example:
     # device_ids_ = "root.sg_test_01.d_01"
@@ -24,6 +25,7 @@ def main():
     # data_types = [TSDataType.BOOLEAN, TSDataType.INT32, TSDataType.INT64, TSDataType.FLOAT, TSDataType.DOUBLE, TSDataType.TEXT]
     # values_ = [False, 10, 11, 1.1, 10011.1, "test_record"]
 
+    print('start insert_records')
     insert_records(session, data_file)
     # # example:
     # device_ids_ = ["root.sg_test_01.d_01", "root.sg_test_01.d_01"]
@@ -41,6 +43,7 @@ def main():
     #     [True, 77, 88, 1.25, 8.125, "test_records02"],
     # ]
 
+    print('start insert_tablet')
     insert_tablet(session, data_file)
     # # example:
     # device_ids_ = "root.sg_test_01.d_01"
@@ -54,6 +57,7 @@ def main():
     # ]
     # timestamps_ = [4, 5, 6, 7]
 
+    print('start insert_tablets')
     insert_tablets(session, data_file)
 
 

@@ -2,6 +2,7 @@
 from parse_json import get_data_from_json
 from parse_json import parse_data
 from iotdb.utils.Tablet import Tablet
+import time
 
 
 def generate_final_data(data, device_prefix):
@@ -25,22 +26,25 @@ def insert_tablets(session, data_file):
     """
     好像适用于同一时间，同一设备，到了多个点
     """
-    print('***开始解析json')
+    # print('***开始解析json')
     # 拿到数据 和 device前缀
     data, device_prefix = get_data_from_json(data_file)
 
-    print('***打开session')
+    # print('***打开session')
     session.open(False)
 
     # 插入数据
-    print('***开始循环拿数据')
+    # print('***开始循环拿数据')
     tablets_ = []
     for line in data:  # line type: dict
         tablet_ = generate_final_data(line, device_prefix)
         tablets_.append(tablet_)
+    start_time = time.time()
     session.insert_tablets(tablets_)
+    end_time = time.time()
+    print('耗时%s秒\n' % (end_time - start_time))
 
-    print('***关闭session')
+    # print('***关闭session')
     session.close()
 
 
@@ -48,19 +52,22 @@ def insert_tablet(session, data_file):
     """
     好像适用于同一时间，同一设备，到了多个点
     """
-    print('***开始解析json')
+    # print('***开始解析json')
     # 拿到数据 和 device前缀
     data, device_prefix = get_data_from_json(data_file)
 
-    print('***打开session')
+    # print('***打开session')
     session.open(False)
 
     # 插入数据
-    print('***开始循环拿数据')
+    # print('***开始循环拿数据')
 
+    start_time = time.time()
     for line in data:  # line type: dict
         tablet_ = generate_final_data(line, device_prefix)
         session.insert_tablet(tablet_)
+    end_time = time.time()
+    print('耗时%s秒\n' % (end_time - start_time))
 
     # 输出插入的数据
 
