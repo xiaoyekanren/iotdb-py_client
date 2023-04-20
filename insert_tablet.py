@@ -42,7 +42,7 @@ def insert_tablets(session, data_file):
     start_time = time.time()
     session.insert_tablets(tablets_)
     end_time = time.time()
-    print('耗时%s秒\n' % (end_time - start_time))
+    print('耗时%s秒\n' % round((end_time - start_time), 2))
 
     # print('***关闭session')
     session.close()
@@ -67,7 +67,7 @@ def insert_tablet(session, data_file):
         tablet_ = generate_final_data(line, device_prefix)
         session.insert_tablet(tablet_)
     end_time = time.time()
-    print('耗时%s秒\n' % (end_time - start_time))
+    print('耗时%s秒\n' % round((end_time - start_time), 2))
 
     # 输出插入的数据
 

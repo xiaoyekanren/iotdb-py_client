@@ -5,6 +5,7 @@ from parse_json import parse_data
 
 
 def insert_record(session, data_file):
+    device_id, insert_time, list_measurements_, list_data_type_, list_values_ = None, None, None, None, None
     # print('***开始解析json')
     # 拿到数据 和 device前缀
     data, device_prefix = get_data_from_json(data_file)
@@ -17,17 +18,17 @@ def insert_record(session, data_file):
         device_id, insert_time, list_measurements_, list_data_type_, list_values_ = parse_data(dict(line), device_prefix)
         session.insert_record(device_id, insert_time, list_measurements_, list_data_type_, list_values_)
     end_time = time.time()
-    print('耗时%s秒\n' % (end_time - start_time))
+    print('耗时%s秒\n' % round((end_time - start_time), 2))
 
-        # # 输出插入的数据
-        # if device_id and insert_time and list_measurements_ and list_data_type_ and list_values_:
-        #     print(
-        #         f'device_id: {device_id}\n'
-        #         f'insert_time: {insert_time}\n'
-        #         f'list_measurements_: {list_measurements_}\n'
-        #         f'list_values_: {list_values_}\n'
-        #         f'list_data_type_: {list_data_type_}\n'
-        #     )
+    # # 输出插入的数据
+    # if device_id and insert_time and list_measurements_ and list_data_type_ and list_values_:
+    #     print(
+    #         f'device_id: {device_id}\n'
+    #         f'insert_time: {insert_time}\n'
+    #         f'list_measurements_: {list_measurements_}\n'
+    #         f'list_values_: {list_values_}\n'
+    #         f'list_data_type_: {list_data_type_}\n'
+    #     )
 
     # print('***关闭session')
     session.close()
@@ -70,7 +71,7 @@ def insert_records(session, data_file):
     start_time = time.time()
     session.insert_records(device_ids_, insert_times_, list_list_measurements_, list_list_data_type_, list_list_values_)
     end_time = time.time()
-    print('耗时%s秒\n' % (end_time - start_time))
+    print('耗时%s秒\n' % round((end_time - start_time), 2))
 
     # 输出插入的数据
     # print(
