@@ -12,13 +12,14 @@ def generate_final_data(data, device_prefix):
     list_list_values_.append(list_values_)  # 把 list 放入 list
     list_insert_times_.append(insert_time)  # 把 int 放入 list
     tablet_ = Tablet(device_id, list_measurements_, list_data_type_, list_list_values_, list_insert_times_)
-    # print(
-    #     f'device_id: {device_id}\n'
-    #     f'list_measurements_: {list_measurements_}\n'
-    #     f'list_data_type_: {list_data_type_}\n'
-    #     f'list_list_values_: {list_list_values_}\n'
-    #     f'list_insert_times_: {list_insert_times_}\n'
-    # )
+    print(
+        f'device_id: {device_id}\n'
+        f'list_measurements_: {list_measurements_}\n'
+        f'list_data_type_: {list_data_type_}\n'
+        f'list_list_values_: {list_list_values_}\n'
+        f'list_insert_times_: {list_insert_times_}\n'
+    )
+
     return tablet_
 
 
