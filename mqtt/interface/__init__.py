@@ -1,6 +1,6 @@
 # coding=utf-8
-from .mqtt import prepare_write as mqtt_write
+from .mqtt import MqttClient
 
 __all__ = [
-    'mqtt_write',
+    'MqttClient',
 ]
