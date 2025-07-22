@@ -63,6 +63,6 @@ if __name__ == '__main__':
         'qos': 2,
     }
     write_tree(tree_conn)
-    write_table(table_conn)
+    # write_table(table_conn)
 
 

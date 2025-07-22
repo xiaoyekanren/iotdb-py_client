@@ -20,7 +20,6 @@ class MqttClient:
         self.max_retry = 10
 
     def _on_connect(self, client, userdata, flags, rc):
-        a = self.host  # 让 _on_connect 不在警告
         if rc == 0:
             print(f"on_connect：返回码：{rc}，连接成功.")
         else:
@@ -39,12 +38,12 @@ class MqttClient:
         # print(f"on_publish: succeed, ID: {mid}")
         pass
 
-    def _on_disconnect(self, client, userdata, rc):
+    def _on_disconnect(self, userdata, rc):
         if self.allow_reconnect:  # 判断是否允许重连
             print(f"on_disconnect：返回码：{rc}")
-            while not client.is_connected() and self.allow_reconnect:
+            while not self.client.is_connected() and self.allow_reconnect:
                 try:
-                    client.reconnect()
+                    self.client.reconnect()
                     time.sleep(3)
                     print("Reconnected successfully.")
                 except Exception as e:
@@ -75,6 +74,11 @@ class MqttClient:
         self.client = client
 
     def exec_write(self, payload: str | list, qos: int = 0):
+        """
+        payload: str -> json, list -> user define
+        """
+        if not self.client:
+            self.init_client()
         try:
             while not self.client.is_connected():
                 time.sleep(1)
