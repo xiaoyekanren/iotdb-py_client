@@ -19,7 +19,7 @@ class MqttClient:
         self.client: mqtt.Client = None  #
         self.max_retry = 10
 
-    def _on_connect(self, client, userdata, flags, rc):
+    def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             print(f"on_connect：返回码：{rc}，连接成功.")
         else:
@@ -38,7 +38,7 @@ class MqttClient:
         # print(f"on_publish: succeed, ID: {mid}")
         pass
 
-    def _on_disconnect(self, userdata, rc):
+    def on_disconnect(self, userdata, rc):
         if self.allow_reconnect:  # 判断是否允许重连
             print(f"on_disconnect：返回码：{rc}")
             while not self.client.is_connected() and self.allow_reconnect:
@@ -60,9 +60,9 @@ class MqttClient:
             protocol=mqtt.MQTTv311,
             client_id=client_id
         )
-        client.on_connect = self._on_connect
+        client.on_connect = self.on_connect
         client.on_publish = self.on_publish
-        client.on_disconnect = self._on_disconnect
+        client.on_disconnect = self.on_disconnect
 
         client.username_pw_set(self.user, self.password)
         client.connect(self.host, self.port, 60)
