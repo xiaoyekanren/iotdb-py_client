@@ -7,7 +7,7 @@ import time
 
 
 class MqttClient:
-    def __init__(self, host=None, port=None, topic=None, user=None, password=None, enable_random_client_id=False):
+    def __init__(self, host=None, port=None, topic=None, user=None, password=None, enable_random_client_id=True):
         self.host = host
         self.port = port
         self.topic = topic

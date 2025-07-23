@@ -59,7 +59,7 @@ if __name__ == '__main__':
         'mqtt_port': 1883,
         'iotdb_user': 'root',
         'iotdb_password': 'root',
-        'mqtt_topic': 'root.interface.d1',  # 树模型，topic为设备
+        'mqtt_topic': 'root.interface.d1',  # 树模型，topic无意义
         'qos': 2,
     }
     write_tree(tree_conn)
