@@ -7,10 +7,9 @@ import time
 
 
 class MqttClient:
-    def __init__(self, host=None, port=None, topic=None, user=None, password=None, enable_random_client_id=True):
+    def __init__(self, host=None, port=None, user=None, password=None, enable_random_client_id=True):
         self.host = host
         self.port = port
-        self.topic = topic
         self.user = user
         self.password = password
 
@@ -73,7 +72,7 @@ class MqttClient:
 
         self.client = client
 
-    def exec_write(self, payload: str | list, qos: int = 0):
+    def exec_write(self, payload: str | list, topic: str, qos: int = 0):
         """
         payload: str -> json, list -> user define
         """
@@ -84,7 +83,7 @@ class MqttClient:
                 time.sleep(1)
                 print('mqtt is disconnected. wait reconnect.')
 
-            result = self.client.publish(self.topic, payload, qos)
+            result = self.client.publish(topic, payload, qos)
             result.wait_for_publish(timeout=1)
             if result.is_published():
                 # print(f"已发布数据，rc：{result.rc}，mid：{result.mid}")
