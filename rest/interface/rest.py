@@ -2,11 +2,12 @@
 
 import json
 import requests
+import base64
+
 
 class RestClient:
     def __init__(self, base_url: str, username='root', password='root'):
         self.base_url = base_url.rstrip('/')
-        import base64
         userpass = f"{username}:{password}"
         self.headers = {
             'Content-Type': 'application/json',
