@@ -48,6 +48,3 @@ class RestClient:
         else:
             raise Exception(f"HTTP {response.status_code}: {response.text}")
 
-    @staticmethod
-    def format_json(text: str):
-        return json.dumps(json.loads(text), indent=2)
