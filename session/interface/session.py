@@ -25,6 +25,7 @@ class TreeSessionClient():
 
     def __enter__(self):
         self.init_client()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
