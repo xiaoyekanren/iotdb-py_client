@@ -18,11 +18,17 @@ class RestClient:
             'nonQuery': 'rest/v2/nonQuery',
             'insertTablet': 'rest/v2/insertTablet',
             'insertRecords': 'rest/v2/insertRecords',
+            'fastLastQuery': 'rest/v2/fastLastQuery',
         }
 
     def query(self, sql: str):
         url = f"{self.base_url}/{self.api['query']}"
         data = {'sql': sql}
+        return self._post(url, data)
+
+    def fast_last_query(self, query_path: str):
+        url = f"{self.base_url}/{self.api['fastLastQuery']}"
+        data = {'prefix_paths': query_path.split('.')}
         return self._post(url, data)
 
     def non_query(self, sql: str):
