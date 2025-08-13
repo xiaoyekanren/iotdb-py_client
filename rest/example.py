@@ -1,4 +1,6 @@
 # coding=utf-8
+import json
+import time
 
 from interface import RestClient
 
@@ -10,6 +12,14 @@ def init_client(conn_info: dict):
         conn_info.get('password'),
     )
     return conn
+
+
+def fast_last_query(conn: RestClient):
+    query_path = 'root.test.g_0.d_0'
+    results: dict = conn.fast_last_query(query_path=query_path)
+
+    print(json.dumps(results, indent=4))
+    return results
 
 
 def query(conn: RestClient):
@@ -73,6 +83,7 @@ def main():
     insert_tablet(conn)
     insert_records(conn)
     query(conn)
+    fast_last_query(conn)
 
 
 if __name__ == '__main__':
