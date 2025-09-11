@@ -7,7 +7,6 @@ def init_client(server_info) -> MqttClient:
     return MqttClient(
         host=server_info['mqtt_host'],
         port=server_info['mqtt_port'],
-        topic=server_info['mqtt_topic'],
         user=server_info['iotdb_user'],
         password=server_info['iotdb_password'],
     )
@@ -48,7 +47,8 @@ def table(conn_info: dict, count=1, one_line_has_record=1, once_client_write_row
     elapsed_time_ms = 0
     for i in payload:
         batch_start_time_ms = int(time.time() * 1000)
-        client.exec_write(payload=i, qos=qos)
+        for j in i:
+            client.exec_write(payload=j, qos=qos, topic=conn_info.get('mqtt_topic'))
         batch_end_time_ms = int(time.time() * 1000)
 
         once_elapsed_time_ms = batch_end_time_ms - batch_start_time_ms
@@ -61,11 +61,11 @@ def table(conn_info: dict, count=1, one_line_has_record=1, once_client_write_row
 
 if __name__ == "__main__":
     table_conn = {
-        'mqtt_host': '127.0.0.1',
+        'mqtt_host': '172.20.31.16',
         'mqtt_port': 1883,
-        'mqtt_topic': 'testdb/timecho',  # 表模型，zzm为数据库
+        'mqtt_topic': 'testdb/xxxx',  # 表模型，testdb 为数据库
         'iotdb_user': 'root',
-        'iotdb_password': 'root',
+        'iotdb_password': 'TimechoDB@2021',
         'qos': 2,
     }
     table(table_conn, count=10000, one_line_has_record=100, once_client_write_rows=10)
