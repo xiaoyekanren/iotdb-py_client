@@ -18,8 +18,8 @@ class Config:
     batch_size = 1000
 
     thread_num = 10  # 线程数量
-    sensor_num = 100  # 序列数量（从0开始编号，共1000个，编号0-999）
-    loop = 1000  # 每个线程执行batch_size的次数
+    sensor_num = 1000  # 序列数量（从0开始编号，共1000个，编号0-999）
+    loop = 10000  # 每个线程执行batch_size的次数
 
 
 def init_client(server_info):
@@ -31,22 +31,17 @@ def init_client(server_info):
     )
 
 
-def gen_dataset(device: str, num_rows: int, start_time):
+def gen_dataset(device: str, batch_size: int):
     measurements = [f"s_{i}" for i in range(Config.sensor_num)]
     dataset = []
-    if start_time is None:
-        start_time = Config.start_time
-    for i in range(num_rows):
-        timestamp = start_time + i * 1000
-        seed_str = f"{device}{timestamp}"
-        random.seed(seed_str)
-        values = [float(f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}") for _ in
-                  range(Config.sensor_num)]
+    seed_str = f"{device}"
+    random.seed(seed_str)
+    for _ in range(batch_size):
+        values = [float(f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}") for _ in range(Config.sensor_num)]
         payload = {
             "device": device,
             "measurements": measurements,
-            "values": values,
-            "timestamp": timestamp
+            "values": values
         }
         dataset.append(payload)
     return dataset
@@ -58,10 +53,14 @@ def write_tree_worker(server_info, device_name):
     qos = server_info['qos']
     device = Config.database + f".{device_name}"
     start_time = Config.start_time
-    for loop_idx in range(Config.loop):
-        print(f"[Thread {device_name}] loop {loop_idx+1}/{Config.loop}")
-        dataset = gen_dataset(device=device, num_rows=Config.batch_size, start_time=start_time)
-        for payload in dataset:
+    print(f"[Thread {device_name}], generating dataset...")
+    base_dataset: list = gen_dataset(device=device, batch_size=Config.batch_size)  # 只生成一次batch_size行数据（不含时间戳）
+    
+    for loop in range(Config.loop):
+        once_dataset = base_dataset
+        print(f"[Thread {device_name}] loop {loop+1}/{Config.loop}")
+        for index, payload in enumerate(once_dataset):  # index, value
+            payload["timestamp"] = start_time + index * 1000
             client.exec_write(json.dumps(payload), topic=topic, qos=qos)
         start_time += Config.batch_size * 1000
 
