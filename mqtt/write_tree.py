@@ -15,11 +15,16 @@ class Config:
     database = "root.mqtt"  # 数据库名称
     start_time = 1000  # 起始时间戳
     
-    batch_size = 1000
+    batch_size = 100
 
     thread_num = 10  # 线程数量
-    sensor_num = 1000  # 序列数量（从0开始编号，共1000个，编号0-999）
-    loop = 10000  # 每个线程执行batch_size的次数
+    sensor_num = 100  # 序列数量（从0开始编号，共1000个，编号0-999）
+    loop = 100  # 每个线程执行batch_size的次数
+
+    # 用于结束后进行点数统计，
+    is_count_point = False
+    count_loop = 100
+    count_interval = 30
 
 
 def init_client(server_info):
@@ -69,7 +74,10 @@ def write_tree(server_info):
     print('1. clear iotdb.')
     with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667,
                            password=tree_conn.get('iotdb_password')) as client:
-        client.non_query("drop database root.**")
+        try:
+            client.non_query("drop database root.**")
+        except Exception as a:
+            print(a)
 
     print('2. start write to iotdb.')
     threads = []
@@ -90,23 +98,24 @@ def write_tree(server_info):
                            password=tree_conn.get('iotdb_password')) as client:
         client.non_query("flush")  # 刷盘
 
-        print('4. start count.')
-        for loop in range(10 * 60):
+        if Config.is_count_point:
+            print('4. start count.')
+            for loop in range(1):
+                for i in range(Config.thread_num):
+                    device_name = f"d{i}"
+                    device = f"root.mqtt.{device_name}"
+                    sensors = ','.join([f"count(s_{j})" for j in range(Config.sensor_num)])
+                    sql = f'select {sensors} from {device}'
+                    query_result = client.query(sql)
+                    while query_result.has_next():
+                        print(query_result.next())
 
-            for i in range(Config.thread_num):
-                device_name = f"d{i}"
-                device = f"root.mqtt.{device_name}"
-                sensors = ','.join([f"count(s_{j})" for j in range(Config.sensor_num)])
-                sql = f'select {sensors} from {device}'
-                query_result = client.query(sql)
-                while query_result.has_next():
-                    print(query_result.next())
-
-            print(
-                str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))) +
-                str(loop + 1)
-            )
-            time.sleep(60)
+                print(
+                    str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))) + ', ' +
+                    'cur loop: ' +
+                    str(loop + 1)
+                )
+                time.sleep(30)
 
 
 if __name__ == '__main__':
