@@ -1,5 +1,5 @@
 # coding=utf-8
-from interface import MqttClient
+from mqtt.interface import MqttClient
 import random
 import json
 import time

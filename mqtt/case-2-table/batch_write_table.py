@@ -1,6 +1,6 @@
 # coding=utf-8
 import time
-from interface.mqtt import MqttClient
+from mqtt.interface import MqttClient
 
 
 def init_client(server_info) -> MqttClient:
