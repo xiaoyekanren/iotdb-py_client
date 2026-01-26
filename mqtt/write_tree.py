@@ -6,6 +6,9 @@ import time
 import threading
 import sys
 import os
+import logging
+from mqtt.interface import logging_conf
+log = logging.getLogger(__name__)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from session.interface import TreeSessionClient
@@ -17,7 +20,7 @@ class Config:
     
     batch_size = 100
 
-    thread_num = 10  # 线程数量
+    thread_num = 10  # 线程/设备 数量）（1个线程管理一个设备）
     sensor_num = 100  # 序列数量（从0开始编号，共1000个，编号0-999）
     loop = 100  # 每个线程执行batch_size的次数
 
@@ -58,12 +61,12 @@ def write_tree_worker(server_info, device_name):
     qos = server_info['qos']
     device = Config.database + f".{device_name}"
     start_time = Config.start_time
-    print(f"[Thread {device_name}], generating dataset...")
+    log.info(f"[Thread {device_name}], generating dataset...")
     base_dataset: list = gen_dataset(device=device, batch_size=Config.batch_size)  # 只生成一次batch_size行数据（不含时间戳）
     
     for loop in range(Config.loop):
         once_dataset = base_dataset
-        print(f"[Thread {device_name}] loop {loop+1}/{Config.loop}")
+        log.info(f"[Thread {device_name}] loop {loop+1}/{Config.loop}")
         for index, payload in enumerate(once_dataset):  # index, value
             payload["timestamp"] = start_time + index * 1000
             client.exec_write(json.dumps(payload), topic=topic, qos=qos)
@@ -71,15 +74,15 @@ def write_tree_worker(server_info, device_name):
 
 
 def write_tree(server_info):
-    print('1. clear iotdb.')
+    log.info('1. clear iotdb.')
     with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667,
                            password=tree_conn.get('iotdb_password')) as client:
         try:
             client.non_query("drop database root.**")
         except Exception as a:
-            print(a)
+            log.warning(a)
 
-    print('2. start write to iotdb.')
+    log.info('2. start write to iotdb.')
     threads = []
     for i in range(Config.thread_num):
         device_name = f"d{i}"
@@ -88,18 +91,15 @@ def write_tree(server_info):
         threads.append(t)
     for t in threads:
         t.join()
-    print(
-        f"hello world, " +
-        str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
-    )
+    log.info("finish write.")
 
-    print('3. exec flush.')
+    log.info('3. exec flush.')
     with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667,
                            password=tree_conn.get('iotdb_password')) as client:
         client.non_query("flush")  # 刷盘
 
         if Config.is_count_point:
-            print('4. start count.')
+            log.info('4. start count.')
             for loop in range(1):
                 for i in range(Config.thread_num):
                     device_name = f"d{i}"
@@ -108,13 +108,9 @@ def write_tree(server_info):
                     sql = f'select {sensors} from {device}'
                     query_result = client.query(sql)
                     while query_result.has_next():
-                        print(query_result.next())
+                        log.info(query_result.next())
 
-                print(
-                    str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))) + ', ' +
-                    'cur loop: ' +
-                    str(loop + 1)
-                )
+                log.info('cur loop: ' + str(loop + 1))
                 time.sleep(30)
 
 
