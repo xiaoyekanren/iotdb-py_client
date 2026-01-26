@@ -1,12 +1,5 @@
 # iotdb-mqtt-test
 
-## sync to server
-
-```shell
-rsync -avz ../iotdb-interface root@172.20.31.15:~/
-```
-
-
 ## 表模型
 1. 生成 “influx行协议标准” 的1行，将全部行加入到list  
 2. 按照 once_write_rows 拆分list成多个list
