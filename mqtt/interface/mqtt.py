@@ -22,7 +22,7 @@ class MqttClient:
         self.client: mqtt.Client = None  #
         self.max_retry = 10
 
-    def on_connect(self, client, userdata, flags, rc):
+    def on_connect(self, client, userdata, flags, rc, properties=None):
         if rc == 0:
             log.info(f"on_connect：返回码：{rc}，连接成功.")
         else:
@@ -37,7 +37,7 @@ class MqttClient:
             if rc == 5:
                 log.error(f"on_connect：返回码：{rc}，未经授权")
 
-    def on_publish(self, client, userdata, mid):
+    def on_publish(self, client, userdata, mid, granted_qos=None, properties=None):
         # log.info(f"on_publish: succeed, ID: {mid}")
         pass
 
