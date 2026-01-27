@@ -24,7 +24,7 @@ class Config:
     sensor_num = 100  # 序列数量（从0开始编号，共1000个，编号0-999）
     loop = 100  # 每个线程执行batch_size的次数
 
-    clear_iotdb = True
+    is_clear_iotdb = True
 
     # 用于结束后进行点数统计，
     is_count_point = False
@@ -41,17 +41,21 @@ def init_client(server_info):
     )
 
 
-def gen_dataset(device: str, batch_size: int):
-    measurements = [f"s_{i}" for i in range(Config.sensor_num)]
+def gen_dataset(device_str: str, batch_size: int):
+    measurements_list: list[str] = [f"s_{i}" for i in range(Config.sensor_num)]
+    measurements_list_str = json.dumps(measurements_list)
     dataset = []
-    seed_str = f"{device}"
+    seed_str = f"{device_str}"
     random.seed(seed_str)
     for _ in range(batch_size):
         values = [float(f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}") for _ in range(Config.sensor_num)]
+        values_list_str__ = [f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}" for _ in range(Config.sensor_num)]
+        values_list_str = ('[' +
+                           ','.join(values_list_str__) +
+                           ']')
         payload = {
-            "device": device,
-            "measurements": measurements,
-            "values": values
+            "measurements": measurements_list_str,
+            "values": values_list_str
         }
         dataset.append(payload)
     return dataset
@@ -64,19 +68,24 @@ def write_tree_worker(server_info, device_name):
     device = Config.database + f".{device_name}"
     start_time = Config.start_time
     log.info(f"[Thread {device_name}], generating dataset...")
-    base_dataset: list = gen_dataset(device=device, batch_size=Config.batch_size)  # 只生成一次batch_size行数据（不含时间戳）
+    base_dataset: list[dict] = gen_dataset(device_str=device, batch_size=Config.batch_size)  # 只生成一次batch_size行数据（不含时间戳）
     
     for loop in range(Config.loop):
-        once_dataset = base_dataset
         log.info(f"[Thread {device_name}] loop {loop+1}/{Config.loop}")
-        for index, payload in enumerate(once_dataset):  # index, value
-            payload["timestamp"] = start_time + index * 1000
-            client.exec_write(json.dumps(payload), topic=topic, qos=qos)
+        for index, payload in enumerate(base_dataset):  # index, value
+            timestamp_str = str(start_time + index * 1000)
+            msg = ('{' +
+                   '"device":' + device + ',' +
+                   '"measurements":' + payload["measurements"] + ',' +
+                   '"values":' + payload["values"] + ',' +
+                   '"timestamp":' + timestamp_str +
+                   '}')
+            client.exec_write(msg, topic=topic, qos=qos)
         start_time += Config.batch_size * 1000
 
 
 def write_tree(server_info):
-    if Config.clear_iotdb:
+    if Config.is_clear_iotdb:
         log.info('1. clear iotdb.')
         with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667,
                                password=tree_conn.get('iotdb_password')) as client:
