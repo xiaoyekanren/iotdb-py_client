@@ -15,16 +15,22 @@ from session.interface import TreeSessionClient
 
 
 class Config:
+    is_clear_iotdb = True
+
     database = "root.mqtt"  # 数据库名称
     start_time = 1000  # 起始时间戳
-    
-    batch_size = 100
 
-    thread_num = 10  # 线程/设备 数量）（1个线程管理一个设备）
-    sensor_num = 100  # 序列数量（从0开始编号，共1000个，编号0-999）
+    is_one_device_write = False  # False: 多设备多序列写入，True: 单设备多序列写入
+
+    thread_num = 10  # 线程数量
+    # 序列数量：
+    #   - is_one_device_write=False时，表示每个设备的序列数量（多设备模式，每个设备有sensor_num个序列）
+    #   - is_one_device_write=True时，表示每个线程负责的序列数量（单设备模式，每个线程负责sensor_num个序列）
+    sensor_num = 100
+    batch_size = 100
     loop = 100  # 每个线程执行batch_size的次数
 
-    is_clear_iotdb = True
+    device_name_prefix = 'd_'
 
     # 用于结束后进行点数统计，
     is_count_point = False
@@ -41,15 +47,16 @@ def init_client(server_info):
     )
 
 
-def gen_dataset(device_str: str, batch_size: int):
-    measurements_list: list[str] = [f"s_{i}" for i in range(Config.sensor_num)]
+def gen_dataset(device_str: str, batch_size: int, sensor_start: int = 0, sensor_count: int = None):
+    if sensor_count is None:
+        sensor_count = Config.sensor_num
+    measurements_list: list[str] = [f"s_{i}" for i in range(sensor_start, sensor_start + sensor_count)]
     measurements_list_str = json.dumps(measurements_list)
     dataset = []
-    seed_str = f"{device_str}"
+    seed_str = f"{device_str}_{sensor_start}" if Config.is_one_device_write else f"{device_str}"
     random.seed(seed_str)
     for _ in range(batch_size):
-        values = [float(f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}") for _ in range(Config.sensor_num)]
-        values_list_str__ = [f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}" for _ in range(Config.sensor_num)]
+        values_list_str__ = [f"{random.randint(100000, 999999)}.{random.randint(0, 99999):05d}" for _ in range(sensor_count)]
         values_list_str = ('[' +
                            ','.join(values_list_str__) +
                            ']')
@@ -61,15 +68,28 @@ def gen_dataset(device_str: str, batch_size: int):
     return dataset
 
 
-def write_tree_worker(server_info, device_name):
+def write_tree_worker(server_info, device_name, sensor_start=0):
     client = init_client(server_info)
     topic = server_info['mqtt_topic']
     qos = server_info['qos']
-    device = Config.database + f".{device_name}"
+
+    if Config.is_one_device_write:
+        # 单设备多序列写入模式：所有线程共享同一个设备
+        device = Config.database + Config.device_name_prefix
+    else:
+        # 多设备多序列写入模式：每个线程管理一个独立设备
+        device = Config.database + f".{device_name}"
+    sensor_count = Config.sensor_num
+
     start_time = Config.start_time
     log.info(f"[Thread {device_name}], generating dataset...")
-    base_dataset: list[dict] = gen_dataset(device_str=device, batch_size=Config.batch_size)  # 只生成一次batch_size行数据（不含时间戳）
-    
+    base_dataset: list[dict] = gen_dataset(
+        device_str=device,
+        batch_size=Config.batch_size,
+        sensor_start=sensor_start,
+        sensor_count=sensor_count
+    )  # 只生成一次batch_size行数据（不含时间戳）
+
     for loop in range(Config.loop):
         log.info(f"[Thread {device_name}] loop {loop+1}/{Config.loop}")
         for index, payload in enumerate(base_dataset):  # index, value
@@ -97,8 +117,14 @@ def write_tree(server_info):
     log.info('2. start write to iotdb.')
     threads = []
     for i in range(Config.thread_num):
-        device_name = f"d{i}"
-        t = threading.Thread(target=write_tree_worker, args=(server_info, device_name))
+        device_name = f"{Config.device_name_prefix}_{i}"
+        if Config.is_one_device_write:
+            # 单设备多序列写入：每个线程负责不同的传感器范围
+            sensor_start = i * Config.sensor_num
+        else:
+            # 多设备多序列写入：每个设备从0开始
+            sensor_start = 0
+        t = threading.Thread(target=write_tree_worker, args=(server_info, device_name, sensor_start))
         t.start()
         threads.append(t)
     for t in threads:
@@ -113,14 +139,26 @@ def write_tree(server_info):
         if Config.is_count_point:
             log.info('4. start count.')
             for loop in range(1):
-                for i in range(Config.thread_num):
-                    device_name = f"d{i}"
-                    device = f"root.mqtt.{device_name}"
-                    sensors = ','.join([f"count(s_{j})" for j in range(Config.sensor_num)])
-                    sql = f'select {sensors} from {device}'
-                    query_result = client.query(sql)
-                    while query_result.has_next():
-                        log.info(query_result.next())
+                if Config.is_one_device_write:
+                    # 单设备多序列写入：查询不同范围的传感器
+                    for i in range(Config.thread_num):
+                        sensor_start = i * Config.sensor_num
+                        device = Config.database
+                        sensors = ','.join([f"count(s_{sensor_start + j})" for j in range(Config.sensor_num)])
+                        sql = f'select {sensors} from {device}'
+                        query_result = client.query(sql)
+                        while query_result.has_next():
+                            log.info(query_result.next())
+                else:
+                    # 多设备多序列写入：查询每个设备的所有传感器
+                    for i in range(Config.thread_num):
+                        device_name = f"d{i}"
+                        device = f"root.mqtt.{device_name}"
+                        sensors = ','.join([f"count(s_{j})" for j in range(Config.sensor_num)])
+                        sql = f'select {sensors} from {device}'
+                        query_result = client.query(sql)
+                        while query_result.has_next():
+                            log.info(query_result.next())
 
                 log.info('cur loop: ' + str(loop + 1))
                 time.sleep(30)
