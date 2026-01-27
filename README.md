@@ -12,6 +12,6 @@ rsync -avz \
     --exclude config.ini \
     --exclude .git \
     ../iotdb-py_client \
-    root@172.20.31.15:~/
+    root@11.101.17.124:~/
 ```
 

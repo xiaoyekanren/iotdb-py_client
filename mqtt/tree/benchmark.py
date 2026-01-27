@@ -1,5 +1,4 @@
 # coding=utf-8
-from mqtt.interface import MqttClient
 import random
 import json
 import time
@@ -7,11 +6,12 @@ import threading
 import sys
 import os
 import logging
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from session.interface import TreeSessionClient
+from mqtt.interface import MqttClient
 from mqtt.interface import logging_conf
 log = logging.getLogger(__name__)
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from session.interface import TreeSessionClient
 
 
 class Config:
@@ -22,7 +22,7 @@ class Config:
 
     is_one_device_write = False  # False: 多设备多序列写入，True: 单设备多序列写入
 
-    thread_num = 10  # 线程数量
+    thread_num = 1  # 线程数量
     # 序列数量：
     #   - is_one_device_write=False时，表示每个设备的序列数量（多设备模式，每个设备有sensor_num个序列）
     #   - is_one_device_write=True时，表示每个线程负责的序列数量（单设备模式，每个线程负责sensor_num个序列）
@@ -107,12 +107,12 @@ def write_tree_worker(server_info, device_name, sensor_start=0):
 def write_tree(server_info):
     if Config.is_clear_iotdb:
         log.info('1. clear iotdb.')
-        with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667,
-                               password=tree_conn.get('iotdb_password')) as client:
-            try:
-                client.non_query("drop database root.**")
-            except Exception as a:
-                log.warning(a)
+        try:
+            with TreeSessionClient(ip=tree_conn.get('mqtt_host'), port=6667, password=tree_conn.get('iotdb_password')) as session_client:
+                session_client.non_query("drop database root.**")
+        except Exception as e:
+            log.error(e)
+            exit()
 
     log.info('2. start write to iotdb.')
     threads = []
@@ -166,7 +166,7 @@ def write_tree(server_info):
 
 if __name__ == '__main__':
     tree_conn = {
-        'mqtt_host': '172.20.31.16',
+        'mqtt_host': '11.101.17.121',
         'mqtt_port': 1883,
         'iotdb_user': 'root',
         'iotdb_password': 'TimechoDB@2021',

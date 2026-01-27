@@ -60,15 +60,22 @@ class MqttClient:
 
         # 创建 MQTT 客户端
         client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             protocol=mqtt.MQTTv311,
-            client_id=client_id
+            client_id=client_id,
         )
         client.on_connect = self.on_connect
         client.on_publish = self.on_publish
         client.on_disconnect = self.on_disconnect
 
         client.username_pw_set(self.user, self.password)
-        client.connect(self.host, self.port, 60)
+
+        try:
+            client.connect(self.host, self.port, 60)
+        except Exception as e:
+            log.error(e)
+            exit()
+
         client.loop_start()
 
         if self.enable_random_client_id:
