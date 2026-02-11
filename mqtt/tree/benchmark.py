@@ -22,15 +22,15 @@ class Config:
 
     is_one_device_write = False  # False: 多设备多序列写入，True: 单设备多序列写入
 
-    thread_num = 1  # 线程数量
+    thread_num = 5  # 线程数量
     # 序列数量：
-    #   - is_one_device_write=False时，表示每个设备的序列数量（多设备模式，每个设备有sensor_num个序列）
-    #   - is_one_device_write=True时，表示每个线程负责的序列数量（单设备模式，每个线程负责sensor_num个序列）
+    #   - is_one_device_write=False时，表示每个设备的序列数量（多设备模式：一共有thread_num个设备，每个设备有sensor_num个序列）
+    #   - is_one_device_write=True时，表示每个线程负责的序列数量（单设备模式：只有1个设备，每个线程负责sensor_num个序列）
     sensor_num = 100
-    batch_size = 100
-    loop = 100  # 每个线程执行batch_size的次数
+    batch_size = 1000
+    loop = 10000  # 每个线程执行batch_size的次数
 
-    device_name_prefix = 'd_'
+    device_name_prefix = 'd'  # 无需分隔符，自动_
 
     # 用于结束后进行点数统计，
     is_count_point = False
@@ -75,7 +75,7 @@ def write_tree_worker(server_info, device_name, sensor_start=0):
 
     if Config.is_one_device_write:
         # 单设备多序列写入模式：所有线程共享同一个设备
-        device = Config.database + Config.device_name_prefix
+        device = Config.database + "." + Config.device_name_prefix
     else:
         # 多设备多序列写入模式：每个线程管理一个独立设备
         device = Config.database + f".{device_name}"
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         'mqtt_host': '11.101.17.121',
         'mqtt_port': 1883,
         'iotdb_user': 'root',
-        'iotdb_password': 'TimechoDB@2021',
+        'iotdb_password': 'root',
         'mqtt_topic': 'root.mqtt.d1',  # 树模型，topic无意义
         'qos': 2,
     }

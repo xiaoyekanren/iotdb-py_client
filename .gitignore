@@ -3,5 +3,5 @@ __pycache__
 .idea
 .DS_Store
 .claude
-
+venv
 jdbc/libs/*.jar
