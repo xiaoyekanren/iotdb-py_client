@@ -88,9 +88,9 @@ def main():
 
 if __name__ == '__main__':
     server_info = {
-        'base_url': 'http://127.0.0.1:18080',
+        'base_url': 'http://172.16.98.16:18080',
         'username': 'root',
-        'password': 'root',
+        'password': 'TimechoDB@2021',
     }
     main()
 
