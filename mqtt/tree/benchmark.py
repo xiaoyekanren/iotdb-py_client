@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 class Config:
     is_clear_iotdb = True
 
-    database = "root.mqtt"  # 数据库名称
+    database = "root.mqtt_tree"  # 数据库名称
     start_time = 1000  # 起始时间戳
 
     is_one_device_write = False  # False: 多设备多序列写入，True: 单设备多序列写入
@@ -26,9 +26,9 @@ class Config:
     # 序列数量：
     #   - is_one_device_write=False时，表示每个设备的序列数量（多设备模式：一共有thread_num个设备，每个设备有sensor_num个序列）
     #   - is_one_device_write=True时，表示每个线程负责的序列数量（单设备模式：只有1个设备，每个线程负责sensor_num个序列）
-    sensor_num = 100
-    batch_size = 1000
-    loop = 10000  # 每个线程执行batch_size的次数
+    sensor_num = 10
+    batch_size = 10
+    loop = 100  # 每个线程执行batch_size的次数
 
     device_name_prefix = 'd'  # 无需分隔符，自动_
 
@@ -166,10 +166,10 @@ def write_tree(server_info):
 
 if __name__ == '__main__':
     tree_conn = {
-        'mqtt_host': '11.101.17.121',
+        'mqtt_host': '172.16.98.17',
         'mqtt_port': 1883,
         'iotdb_user': 'root',
-        'iotdb_password': 'root',
+        'iotdb_password': 'TimechoDB@2021',
         'mqtt_topic': 'root.mqtt.d1',  # 树模型，topic无意义
         'qos': 2,
     }

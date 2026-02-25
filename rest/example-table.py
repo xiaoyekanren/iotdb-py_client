@@ -15,11 +15,11 @@ headers = {
 
 
 def create_database():
-    """创建test数据库"""
+    """创建 rest_table 数据库"""
     url = f"{BASE_URL}/nonQuery"
     # 请求体数据
     data = {
-        "sql": "create database test",
+        "sql": "create database rest_table",
         "database": ""
     }
     try:
@@ -41,11 +41,11 @@ def create_database():
 
 
 def create_table():
-    """在test库中创建table1表"""
+    """在 rest_table 库中创建 t1 表"""
     url = f"{BASE_URL}/nonQuery"
     # 请求体数据（注意SQL语句的换行处理，提升可读性）
     create_table_sql = """
-                       CREATE TABLE table1
+                       CREATE TABLE t1
                        (
                            time         TIMESTAMP TIME,
                            region       STRING TAG,
@@ -61,7 +61,7 @@ def create_table():
                        """
     data = {
         "sql": create_table_sql.strip(),  # 去除首尾空白字符
-        "database": "test"
+        "database": "rest_table"
     }
     try:
         response = requests.post(
@@ -81,11 +81,11 @@ def create_table():
 
 
 def insert_data():
-    """向test库的test_table插入数据"""
+    """向 rest_table 库的 t1 插入数据"""
     url = f"{BASE_URL}/insertTablet"
     data = {
-        "database": "test",
-        "table": "table1",
+        "database": "rest_table",
+        "table": "t1",
         "column_categories": ["TAG", "TAG", "TAG", "ATTRIBUTE", "ATTRIBUTE", "FIELD", "FIELD", "FIELD", "FIELD"],
         "timestamps": [1739702535000, 1739789055000],
         "column_names": ["region", "plant_id", "device_id", "model_id", "maintenance", "temperature", "humidity",
@@ -114,11 +114,11 @@ def insert_data():
 
 
 def query_data():
-    """查询test库中test_table表的s1,s2,s3字段数据"""
+    """查询 rest_table 库中 t1 表的s1,s2,s3字段数据"""
     url = f"{BASE_URL}/query"  # 查询接口是/query（区别于非查询的nonQuery）
     data = {
-        "database": "test",
-        "sql": "select * from table1"
+        "database": "rest_table",
+        "sql": "select * from t1"
     }
     try:
         response = requests.post(
@@ -140,7 +140,7 @@ def query_data():
 # 主执行逻辑
 if __name__ == "__main__":
     # 按顺序执行：创建数据库 → 创建表 → 插入数据 → 查询数据
-    # create_database()
-    # create_table()
+    create_database()
+    create_table()
     insert_data()
     query_data()

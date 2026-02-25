@@ -23,14 +23,14 @@ def fast_last_query(conn: RestClient):
 
 
 def query(conn: RestClient):
-    sql = 'select * from root.g1.**;'
+    sql = 'select * from root.rest_tree.**;'
     results: dict = conn.query(sql)
 
     print(results)
 
 
 def non_query(conn: RestClient):
-    sql = 'insert into root.g1.d1(time, s1, s2) values (1, 123456, \'abcdefg\')'
+    sql = 'insert into root.rest_tree.d1(time, s1, s2) values (1, 123456, \'abcdefg\')'
     results = conn.non_query(sql)
 
 
@@ -44,7 +44,7 @@ def insert_tablet(conn: RestClient):  # 列写入
             [1, False]  # s4
         ],
         "is_aligned": False,
-        "device": "root.g1.d1"
+        "device": "root.rest_tree.d1"
     }
     conn.insert_tablet(dataset)
 
@@ -71,7 +71,7 @@ def insert_records(conn: RestClient):  # 行写入
             [88888, "88888"]
         ],
         "is_aligned": False,
-        "devices": ["root.g1.d1", "root.g1.d1", "root.g1.d1", "root.g1.d1"]
+        "devices": ["root.rest_tree.d1", "root.rest_tree.d1", "root.rest_tree.d1", "root.rest_tree.d1"]
     }
     conn.insert_records(dataset)
 

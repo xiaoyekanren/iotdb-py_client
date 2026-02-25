@@ -61,9 +61,9 @@ def table(conn_info: dict, count=1, one_line_has_record=1, once_client_write_row
 
 if __name__ == "__main__":
     table_conn = {
-        'mqtt_host': '172.20.31.16',
+        'mqtt_host': '172.16.98.17',
         'mqtt_port': 1883,
-        'mqtt_topic': 'testdb/xxxx',  # 表模型，testdb 为数据库
+        'mqtt_topic': 'mqtt_table/xxxx',  # 表模型，mqtt_table 为数据库
         'iotdb_user': 'root',
         'iotdb_password': 'TimechoDB@2021',
         'qos': 2,
